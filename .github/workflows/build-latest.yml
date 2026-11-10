@@ -1,4 +1,4 @@
-name: Build EglantinePS5 (última versión del original)
+name: "Build EglantinePS5"
 
 on:
   workflow_dispatch:
@@ -15,14 +15,12 @@ jobs:
     env:
       EGLANTINEPS5_DEPS_CACHE: ${{ github.workspace }}/../.deps-cache
     steps:
-      # Libera espacio en disco (la compilación es muy grande)
       - name: Liberar espacio
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           df -h /
 
-      # En vez de sincronizar el fork, descarga siempre lo último del original
-      - name: Descargar la última versión del repositorio original
+      - name: Descargar la ultima version del repositorio original
         uses: actions/checkout@v4
         with:
           repository: heydemoura/EglantinePS5
@@ -30,17 +28,17 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Mostrar qué versión se compila
-        run: git log -1 --format='Commit %h del %cd: %s'
+      - name: Mostrar que version se compila
+        run: git log -1 --format='Commit %h del %cd - %s'
 
-      - name: Restaurar caché de dependencias
+      - name: Restaurar cache de dependencias
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/../.deps-cache
           key: deps-${{ hashFiles('tools/deps.json') }}
           restore-keys: deps-
 
-      - name: Restaurar caché de ccache
+      - name: Restaurar cache de ccache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -49,26 +47,23 @@ jobs:
           key: ccache-${{ github.run_id }}
           restore-keys: ccache-
 
-      - name: Instalar herramientas de compilación
+      - name: Instalar herramientas de compilacion
         run: bash tools/ci/setup-ubuntu-24.04.sh
 
       - name: Compilar
-        env:
-          JOBS: ${{ steps.cores.outputs.n }}
         run: |
           export JOBS=$(nproc)
           export RADV_BUILD_JOBS=$(nproc)
           bash tools/ci/build-release.sh
 
-      # Se guardan las cachés aunque falle, para que el siguiente intento avance
-      - name: Guardar caché de dependencias
+      - name: Guardar cache de dependencias
         if: always()
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/../.deps-cache
           key: deps-${{ hashFiles('tools/deps.json') }}-${{ github.run_id }}
 
-      - name: Guardar caché de ccache
+      - name: Guardar cache de ccache
         if: always()
         uses: actions/cache/save@v4
         with:

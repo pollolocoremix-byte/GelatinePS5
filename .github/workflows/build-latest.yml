@@ -66,6 +66,18 @@ jobs:
 
       - name: Compilar
         run: |
+          SPIRV_DIR="$HOME/spirv-llvm-translator"
+          PC=$(find "$SPIRV_DIR" -name LLVMSPIRVLib.pc | head -n1)
+          echo "Archivo pkg-config encontrado: $PC"
+          if [ -z "$PC" ]; then
+            echo "No se encontro LLVMSPIRVLib.pc. Contenido de la carpeta:"
+            find "$SPIRV_DIR" -maxdepth 4 | head -60
+            exit 1
+          fi
+          LIBSO=$(find "$SPIRV_DIR" -name 'libLLVMSPIRVLib.so*' | head -n1)
+          export PKG_CONFIG_PATH="$(dirname "$PC"):$PKG_CONFIG_PATH"
+          export CMAKE_PREFIX_PATH="$SPIRV_DIR:$CMAKE_PREFIX_PATH"
+          if [ -n "$LIBSO" ]; then export LD_LIBRARY_PATH="$(dirname "$LIBSO"):$LD_LIBRARY_PATH"; fi
           export JOBS=$(nproc)
           export RADV_BUILD_JOBS=$(nproc)
           bash tools/ci/build-release.sh

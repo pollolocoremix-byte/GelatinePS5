@@ -47,8 +47,22 @@ jobs:
           key: ccache-${{ github.run_id }}
           restore-keys: ccache-
 
+      - name: Restaurar cache del traductor SPIR-V
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/spirv-llvm-translator
+          key: spirv-${{ hashFiles('tools/ci/setup-ubuntu-24.04.sh') }}
+          restore-keys: spirv-
+
       - name: Instalar herramientas de compilacion
-        run: bash tools/ci/setup-ubuntu-24.04.sh
+        run: bash tools/ci/setup-ubuntu-24.04.sh "$HOME/spirv-llvm-translator"
+
+      - name: Guardar cache del traductor SPIR-V
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/spirv-llvm-translator
+          key: spirv-${{ hashFiles('tools/ci/setup-ubuntu-24.04.sh') }}-${{ github.run_id }}
 
       - name: Compilar
         run: |
